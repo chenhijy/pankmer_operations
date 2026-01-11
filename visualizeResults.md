@@ -41,3 +41,82 @@
 
 </details>
 
+<details> 
+	<summary><code>getCombinedRawSignalForRegion.sh</code></summary> 
+	
+	```
+	#!/bin/bash 
+	set -beEuo pipefail
+	
+	# getCombinedRawSignalForRegion.sh ${coordinates}
+	
+	coords=$1
+	chrom=$(echo $coords | cut -d":" -f1)
+	runID=241002
+	
+	convertGenomePositionFormatToBEDformat.sh ${coords} | tail -n 1 > ${coords}.bed
+	
+	indexesToQuery="15_MaturityGrpV_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 17_MaturityGrpIII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 21_MaturityGrpIV_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 4_MaturityGrpVIIandVIII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 5_MaturityGrpVI_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 8_MaturityGrp0and00_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002 8_MaturityGrpIandII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002"
+	
+	outfile=combinedRawSignal_${coords}.tsv
+	
+	rm -f $outfile
+	
+	for i in $indexesToQuery; do
+		id=$(echo $i | cut -d"_" -f1-2)
+		intersectBed -a ${i}/${chrom}_${runID}.bdg -b ${coords}.bed | awk -v name=$id -F"\t" 'OFS="\t" {print $1, $2+1, $4, name "\n" $1, $3, $4, name}' >> $outfile
+	done
+
+	```
+
+</details>
+
+<details> 
+	<summary><code>plotRegionGtracks.sh</code></summary> 
+	
+	```
+	#!/bin/bash
+	set -beEuo pipefail
+	
+	chromSizeFile=/data1/hechen/MUsoyGenomes/assemblies/nearlyGaplessRefAssemblies/Williams82_genome/Wm82.a5.refAssembly.chrom.sizes
+	
+	refGenes=/data1/hechen/MUsoyGenomes/assemblies/nearlyGaplessRefAssemblies/Williams82_genome/Wm82.a5.genes.bed12.gz
+	
+	# outroot=plotsForInclusiveSubsets
+	
+	inroot1=8_MaturityGrp0and00_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot2=8_MaturityGrpIandII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot3=17_MaturityGrpIII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot4=21_MaturityGrpIV_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot5=15_MaturityGrpV_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot6=5_MaturityGrpVI_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	inroot7=4_MaturityGrpVIIandVIII_index-ANCHOREDTO-Gmax_Wm82a5softmasked_241002
+	runID=241002
+	
+	coords=$1
+	chrom=$(echo $coords | cut -d":" -f1)
+	chromSize=$(grep $chrom $chromSizeFile | cut -f2)
+	echo $chrom $chromSize
+	
+	bedgraph1=${inroot1}/${chrom}_${runID}.bw
+	bedgraph2=${inroot2}/${chrom}_${runID}.bw
+	bedgraph3=${inroot3}/${chrom}_${runID}.bw
+	bedgraph4=${inroot4}/${chrom}_${runID}.bw
+	bedgraph5=${inroot5}/${chrom}_${runID}.bw
+	bedgraph6=${inroot6}/${chrom}_${runID}.bw
+	bedgraph7=${inroot7}/${chrom}_${runID}.bw
+	
+	gtracks --genes ${refGenes} \
+		--coord-regex '[\s\S]+:[0-9]+-[0-9]+$' ${coords} \
+		${bedgraph1} \
+		${bedgraph2} \
+		${bedgraph3} \
+		${bedgraph4} \
+		${bedgraph5} \
+		${bedgraph6} \
+		${bedgraph7} \
+		${coords}.png --plot-type "line:1" --gene-rows 3 --overlay --max 100 
+	```
+
+</details>
+
