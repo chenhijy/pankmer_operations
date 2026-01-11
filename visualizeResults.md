@@ -1,5 +1,5 @@
 <details> 
-	<summary>`getKmerConsSignalForSubRegion.sh`</summary> 
+	<summary> `getKmerConsSignalForSubRegion.sh` </summary> 
 	
 	```
 	#!/bin/bash 
