@@ -1,0 +1,10 @@
+{
+    "index": "tinyTestPhased231120_index.tar",
+    "genomes": "Gmax_MU-04",
+    "exclusive": true,
+    "sample": "exclusiveSubset_Gmax_MU-04_from_tinyTestPhased231120_index",
+    "disk_mb": 20000,
+    "mem_mb": 20000,
+    "threads": 32,
+    "mem_split": 1
+}

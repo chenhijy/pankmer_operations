@@ -1,0 +1,10 @@
+{
+    "genomes": "assemblies/Gsoj_PI483463_refAssembly.softmasked.fa.gz",
+    "paired_genomes_set1": "assemblies/hap1Assemblies/Gmax_MU-009_v1.hifiasm.hap1.fa.gz assemblies/hap1Assemblies/Gmax_MU-014_v1.hifiasm.hap1.fa.gz",
+    "paired_genomes_set2": "assemblies/hap2Assemblies/Gmax_MU-009_v1.hifiasm.hap2.fa.gz assemblies/hap2Assemblies/Gmax_MU-014_v1.hifiasm.hap2.fa.gz",
+    "sample": "pankmer/smallSCNphasedGenomes211121",
+    "disk_mb": 1000000,
+    "mem_mb": 200000,
+    "threads": 10,
+    "mem_split": 1
+}

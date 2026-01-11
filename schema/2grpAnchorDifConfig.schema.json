@@ -1,0 +1,52 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "",
+    "required": [
+        "indexes",
+        "sample",
+        "anchorAssembly",
+        "anchorChromSizeDict",
+        "uniqueID"
+    ],
+    "properties": {
+        "sample": {
+            "type": "string",
+            "description": "prefix name for output file"
+        },
+        "indexes":  {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+                "type": "string"
+            },  
+            
+            "description": "a list of paths to input indexes to anchor"
+        },
+        "anchorAssembly":  {
+            "type": "string",
+            "description": "path to fasta file for the anchor/reference assembly"
+        },
+        "anchorChromSizeDict": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {"type": "integer"}
+            },
+            "description": "dictionary/object mapping assembly abbreviations to assembly file names (basenames only, e.g. Gmax_MU-041.v1.softmasked.fa.gz)"
+        },
+        "uniqueID":  {
+            "type": "string",
+            "description": "uniqueID for maybe distinguishing output from different runs"
+        },
+        "localDirPath": {
+            "type": "string",
+            "description": "e.g. /data1/hechen/MUsoyGenomes/ <-- must include trailing forward slash",
+            "default": ""
+        },
+        "threads": {
+            "type": "integer",
+            "description": "the number of threads to use for mapping",
+            "default": 32
+        }
+    }
+}

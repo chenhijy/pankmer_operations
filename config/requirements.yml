@@ -1,0 +1,28 @@
+name: pankmer_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - snakemake
+  - rust
+  - python == 3.10
+  - biopython
+  - seaborn
+  - urllib3
+  - python-newick
+  - pyfaidx
+  - gff2bed
+  - upsetplot
+  - Cython
+  - pybedtools
+  - bedtools
+  - more-itertools
+  - gcc_linux-64
+  - gxx_linux-64
+  - pip
+  - ucsc-bedgraphpack
+  - ucsc-bedgraphtobigwig
+  - ucsc-fasize
+  - pyfastx
+  - pip:
+    - pankmer

@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "",
+    "required": [
+        "genomes",
+        "outdir",
+        "outputID"
+    ],
+    "properties": {
+        "genomes":  {
+            "type": "string",
+            "description": "comma-separated list of paths to input assemblies"
+        },
+        "outputID": {
+            "type": "string",
+            "description": "basename/ID for output files"
+        },
+        "k": {
+            "type":"integer",
+            "description": "kmer size",
+            "default": 31
+        },
+        "outbase": {
+            "type": "string",
+            "description": "outdir for output files"
+        },
+        "threads": {
+            "type": "integer",
+            "description": "the number of threads to use for mapping",
+            "default": 32
+        },
+        "rounds": {
+            "type": "integer",
+            "description": "indexing rounds (for reducing mem usage)",
+            "default": 1
+        },
+        "fraction": {
+            "type": "number",
+            "description": "fraction of kmers to score",
+            "default": 1.0
+        },
+        "metric": {
+            "type": "string",
+            "description": "similarity metric",
+            "default": "ani"
+        },
+        "method": {
+            "type": "string",
+            "description": "clustering method",
+            "default": "complete"
+        },
+        "width": {
+            "type": "integer",
+            "description": "figure width",
+            "default": 15
+        },
+        "height": {
+            "type": "integer",
+            "description": "figure height",
+            "default": 15
+        },
+        "dend-ratio": {
+            "type": "number",
+            "description": "Fraction of plot width used for dendrogram",
+            "default": 0.4
+        }
+    }
+}

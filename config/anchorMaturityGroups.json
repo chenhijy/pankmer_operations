@@ -1,0 +1,12 @@
+{
+    "outdir": "pankmer/maturityGroupAnalysis2_41002",
+    "uniqueID": "241003",
+    "indexes": ["pankmer/maturityGroupAnalysis2_41002/15_MaturityGrpV_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/17_MaturityGrpIII_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/21_MaturityGrpIV_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/4_MaturityGrpVIIandVIII_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/5_MaturityGrpVI_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/8_MaturityGrp0and00_index.tar",
+                "pankmer/maturityGroupAnalysis2_41002/8_MaturityGrpIandII_index.tar"],
+    "anchorAssembly": "assemblies/FINAL/Gsoj_PI483463.a01.softmasked.fasta.gz"
+}

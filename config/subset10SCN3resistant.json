@@ -1,0 +1,10 @@
+{
+    "index": "127glycineAssemblies_index.tar",
+    "genomes": "Gmax_MU-030.v1.hifiasm.diploid Gmax_MU-049.v1.hifiasm.diploid Gmax_MU-080.v1.hifiasm.diploid Gmax_MU-082.v1.hifiasm.diploid Gmax_MU-087.v1.hifiasm.diploid Gmax_MU-089.v1.hifiasm.diploid Gmax_MU-096.v1.hifiasm.diploid Gmax_MU-097.v1.hifiasm.diploid Gmax_MU-101.v1.hifiasm.diploid Gsoj_MU-035.v1.hifiasm.diploid",
+    "exclusive": false,
+    "sample": "subset_of_127glycineAssemblies_cystNematodeRace3_10resistant",
+    "disk_mb": 1000000,
+    "mem_mb": 200000,
+    "threads": 64,
+    "mem_split": 1
+}

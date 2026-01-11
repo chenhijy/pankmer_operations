@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "",
+    "required": [
+        "index",
+        "genomes",
+        "exclusive",
+        "sample"
+    ],
+    "properties": {
+        "index":  {
+            "type": "string",
+            "description": "path to input index"
+        },
+        "genomes":  {
+            "type": "string",
+            "description": "space-separated list of genomes (names only, not paths) to include in subset; must match the metadata.json of the index"
+        },
+        "exclusive":  {
+            "type": "boolean",
+            "description": "should the subset be exclusive to kmers found only in one or more of the subset genomes?",
+            "default": false
+        },
+        "sample": {
+            "type": "string",
+            "description": "prefix name for output directory"
+        }
+    }
+}

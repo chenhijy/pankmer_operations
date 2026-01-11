@@ -1,0 +1,10 @@
+{
+    "genomes": "/data1/hechen/MUsoyGenomes/assemblies/Gmax_MU-080_ptg000078l.fa.gz",
+    "paired_genomes_set1": "/data1/hechen/MUsoyGenomes/assemblies/Gmax_MU-041_ptg000055l.fa.gz",
+    "paired_genomes_set2": "/data1/hechen/MUsoyGenomes/assemblies/Gmax_MU-049_ptg000221l.fa.gz",
+    "sample": "/data1/hechen/MUsoyGenomes/pankmer/tinyTestPaired231119",
+    "disk_mb": 20000,
+    "mem_mb": 20000,
+    "threads": 10,
+    "mem_split": 5
+}

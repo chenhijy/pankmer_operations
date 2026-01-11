@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "",
+    "required": [
+        "index",
+        "outbase"
+    ],
+    "properties": {
+        "index":  {
+            "type": "string",
+            "description": "index tar",
+            "pattern": ".*\\.tar"
+        },
+        "outbase": {
+            "type": "string",
+            "description": "prefix name for output directories"
+        },
+        "metric": {
+            "type": "string",
+            "description": "similarity metric",
+            "default": "ani"
+        },
+        "method": {
+            "type": "string",
+            "description": "clustering method",
+            "default": "complete"
+        },
+        "width": {
+            "type": "integer",
+            "description": "figure width",
+            "default": 15
+        },
+        "height": {
+            "type": "integer",
+            "description": "figure height",
+            "default": 15
+        },
+        "dend-ratio": {
+            "type": "number",
+            "description": "Fraction of plot width used for dendrogram",
+            "default": 0.4
+        }
+    }
+}

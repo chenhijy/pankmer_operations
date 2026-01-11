@@ -1,0 +1,10 @@
+{
+    "index": "127glycineAssemblies_index.tar",
+    "genomes": "Gcan_MU-064.v1.hifiasm.diploid Gcyr_MU-065.v1.hifiasm.diploid Gsoj_MU-002.v1.hifiasm.diploid Gsoj_MU-029.v1.hifiasm.diploid Gsoj_MU-031.v1.hifiasm.diploid Gsoj_MU-032.v1.hifiasm.diploid Gsoj_MU-033.v1.hifiasm.diploid Gsoj_MU-035.v1.hifiasm.diploid Gsoj_MU-037.v1.hifiasm.diploid Gsoj_MU-039.v1.hifiasm.diploid Gsoj_MU-040.v1.hifiasm.diploid Gsoj_MU-042.v1.hifiasm.diploid Gsoj_MU-057-1.v1.hifiasm.diploid Gsoj_MU-058.v1.hifiasm.diploid Gsoj_MU-092.v1.hifiasm.diploid Gsoj_MU-098.v1.hifiasm.diploid Gsoj_MU-099-1.v1.hifiasm.diploid Gste_MU-054.v1.hifiasm.diploid Gsyn_MU-046.v1.hifiasm.diploid Gtme_MU-112.v1.hifiasm.diploid Gtme_MU-113.v1.hifiasm.diploid Gcyr_G1267a1 Gdol_G1134a1 Gfal_G1718a1 Gsoj_PI483463_refAssembly.softmasked Gsoj_W03a1 Gste_G1974a1 Gsyn_G1300a1 Gtme_G1403a1",
+    "exclusive": true,
+    "sample": "xclsvSubset_29wild_from127glycineAssemblies",
+    "disk_mb": 1000000,
+    "mem_mb": 200000,
+    "threads": 32,
+    "mem_split": 1
+}

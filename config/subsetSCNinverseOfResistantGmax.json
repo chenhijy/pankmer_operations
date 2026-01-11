@@ -1,0 +1,10 @@
+{
+    "index": "SCNphasedGenomes211126_index.tar",
+    "genomes": "Gmax_MU-009.v1.hifiasm.diploid Gmax_MU-014.v1.hifiasm.diploid Gsoj_MU-032.v1.hifiasm.diploid Gsoj_MU-035.v1.hifiasm.diploid Gsoj_PI483463_refAssembly.hifiasm.diploid Lee.a3.refAssembly Wm82.a5.refAssembly",
+    "exclusive": false,
+    "sample": "subset_inverseOfResistantGmax_fromSCNphasedGenomes211126",
+    "disk_mb": 1000000,
+    "mem_mb": 200000,
+    "threads": 32,
+    "mem_split": 1
+}
