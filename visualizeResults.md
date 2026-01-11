@@ -120,3 +120,4 @@
 
 </details>
 
+<img title="example output" alt="example output" src="egVizOutput.jpg">
