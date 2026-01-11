@@ -1,0 +1,103 @@
+from snakemake.utils import validate
+import json
+
+validate(config, "schema/characterizeIndexConfig.schema.json")
+print(json.dumps(config, indent=4))
+
+outbase = config["outbase"]
+
+rule all:
+    input:
+        adjmat = f"{outbase}Characterization/{outbase}_adjMat.tsv",
+        ani_cluster_svg = f"{outbase}Characterization/{outbase}_aniAdjMat.svg",
+        jaccard_cluster_svg = f"{outbase}Characterization/{outbase}_jaccardAdjMat.svg",
+        collect_plot = f"{outbase}Characterization/{outbase}_collect.svg",
+        collect_LogPlot = f"{outbase}Characterization/{outbase}_logCollect.svg",
+        collect_table = f"{outbase}Characterization/{outbase}_collect.tsv",
+        tree = f"{outbase}Characterization/{outbase}_aniTree.nwk",
+        counts = f"{outbase}Characterization/{outbase}_diagnosticKmerCounts.tsv"
+
+rule run_AdjMatrix:
+    group:
+        "pankmerAdjMat-related_" + outbase.split("/")[-1]
+    input:
+        index = config["index"]
+    output:
+        adjmat = f"{outbase}Characterization/{outbase}_adjMat.tsv"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer adj-matrix -i {input.index} -o {output.adjmat}
+        """
+
+rule run_clustermap:
+    group:
+        "pankmerAdjMat-related_" + outbase.split("/")[-1]
+    input:
+        adjmat = rules.run_AdjMatrix.output[0]
+    output:
+        ani_cluster_svg = f"{outbase}Characterization/{outbase}_aniAdjMat.svg",
+        jaccard_cluster_svg = f"{outbase}Characterization/{outbase}_jaccardAdjMat.svg"
+    conda:
+        "config/requirements.yml"
+    params:
+        outbase = config["outbase"],
+        dendRatio = config["dend-ratio"],
+        method = config["method"],
+        width = config["width"],
+        height = config["height"]
+    shell:
+        """
+        pankmer clustermap -i {input.adjmat} --method {params.method} --metric ani -o {output.ani_cluster_svg} --height {params.height} \
+        --width {params.width} --dend-ratio {params.dendRatio}
+        pankmer clustermap -i {input.adjmat} --method {params.method} --metric jaccard -o {output.jaccard_cluster_svg} --height {params.height} \
+        --width {params.width} --dend-ratio {params.dendRatio}
+        """
+
+rule run_collect:
+    group:
+        "pankmerCollect_" + outbase.split("/")[-1]
+    input:
+        index = config["index"]
+    output:
+        collect_plot = f"{outbase}Characterization/{outbase}_collect.svg",
+        collect_LogPlot = f"{outbase}Characterization/{outbase}_logCollect.svg",
+        collect_table = f"{outbase}Characterization/{outbase}_collect.tsv"
+    conda:
+        "config/requirements.yml"
+    params:
+        outbase = outbase
+    shell:
+        """
+        pankmer collect --log -i {input.index} -o {output.collect_LogPlot} -t {output.collect_table} --title '{params.outbase} collect curve'
+        pankmer collect -i {input.index} -o {output.collect_plot} -t {output.collect_table} --title '{params.outbase} collect curve'
+        """
+
+rule run_count:
+    group:
+        "pankmerCount_" + outbase.split("/")[-1]
+    input:
+        index = config["index"]
+    output:
+        counts = f"{outbase}Characterization/{outbase}_diagnosticKmerCounts.tsv"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer count -i {input.index} > {output.counts}
+    """
+
+rule run_tree:
+    group:
+        "pankmerAdjMat-related_" + outbase.split("/")[-1]
+    input:
+        adjmat = rules.run_AdjMatrix.output[0]
+    output:
+        tree = f"{outbase}Characterization/{outbase}_aniTree.nwk"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer tree -i {input.adjmat} --metric ani -n > {output.tree}
+        """

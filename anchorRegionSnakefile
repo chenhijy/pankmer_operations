@@ -1,0 +1,140 @@
+from snakemake.utils import validate
+import json #, random, string
+from decimal import Decimal
+
+validate(config, "schema/anchorRegionConfig.schema.json")
+print(json.dumps(config, indent=4))
+
+# generate random 8-char alphanumeric barcode to shorten file names
+# RANDOM_ID = "".join(random.choices( string.ascii_letters + string.digits, k=8 ))
+
+RANDOM_ID = config["uniqueID"]
+
+# LOCAL_PATH = config["localDirPath"]
+INDEXES = [ idx for idx in config["indexes"] ]
+OUTDIR = config["outdir"]
+
+def getIndexRoot(idx):
+    return idx.split("/")[-1].split(".")[0]
+
+INDEX_ROOT_DICT = {}
+for i in INDEXES:
+    INDEX_ROOT_DICT[getIndexRoot(i)] = i
+
+ANCHOR = config["anchorAssembly"]
+ANCHOR_ROOT = "".join(ANCHOR.split("/")[-1].split(".")[:-2])  # e.g. Gmax_MU-049.v1.softmasked
+ANCHOR_CHROM_LIST = config["anchorAsmChromList"]
+
+WINDOW_SIZES = [5e4, 2.5e5, 1e6]
+
+#ruleorder: makeChromSizeFile > run_anchoring > combineBedgraphs > averageAnchorSignalAcrossWindows > all
+
+rule all:
+    input:
+        f"{OUTDIR}/pankmerAnchorBedgraphs/{ANCHOR_ROOT}.chrom.sizes",
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{chrom}_{RANDOM_ID}.{filetype}", OUTDIR=[OUTDIR], RANDOM_ID=[RANDOM_ID], idxRoot=INDEX_ROOT_DICT.keys(), ANCHOR_ROOT=[ANCHOR_ROOT], chrom=ANCHOR_CHROM_LIST, filetype=["bdg", "bw"]),
+
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{windowSize}bpWindows_{ANCHOR_ROOT}.bed", OUTDIR=[OUTDIR], windowSize=[str(int(s)) for s in WINDOW_SIZES], ANCHOR_ROOT=[ANCHOR_ROOT]),
+
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{idxRoot}_wholeGenome_{RANDOM_ID}.bedgraph", OUTDIR=[OUTDIR], RANDOM_ID=[RANDOM_ID], idxRoot=INDEX_ROOT_DICT.keys(), ANCHOR_ROOT=[ANCHOR_ROOT]),
+
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{idxRoot}_wholeGenome_avgOver{windowSize}bpWindows_{RANDOM_ID}.avgdBdg", OUTDIR=[OUTDIR], windowSize=[str(int(s)) for s in WINDOW_SIZES], idxRoot=INDEX_ROOT_DICT.keys(), RANDOM_ID=[RANDOM_ID], ANCHOR_ROOT=[ANCHOR_ROOT])
+
+
+rule makeChromSizeFile:
+    priority: 100
+    input:
+        anchor = ANCHOR
+    conda:  
+        "config/requirements.yml"
+    output:
+        chromSizeFile = f"{OUTDIR}/pankmerAnchorBedgraphs/{ANCHOR_ROOT}.chrom.sizes"
+    shell:
+        """
+        faSize -detailed -tab {input.anchor} > {output.chromSizeFile}
+        """
+
+rule run_anchoring:
+    priority: 90
+    group:
+        "anchor{idxRoot}{chrom}{ANCHOR_ROOT}{RANDOM_ID}"
+    input: 
+        index = INDEXES,
+        anchor = ANCHOR,
+        anchorChromSizeFile = rules.makeChromSizeFile.output[0]
+    output:
+        "{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{chrom}_{RANDOM_ID}.bdg",
+        "{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{chrom}_{RANDOM_ID}.bw"
+    conda:
+        "config/requirements.yml"
+    params:
+        threads = config["threads"],
+        #idxRoot = lambda wildcards, output: output[0].split("/")[-2].split("-")[0],
+        index =  lambda wildcards, output: INDEX_ROOT_DICT.get(output[0].split("/")[-2].split("-")[0]),
+        #chrom = lambda wildcards, output: output[0].split("/")[-1].split("_"+RANDOM_ID)[0],
+        #chromSize = lambda wildcards, output: CHROM_DICT.get(output[0].split("/")[-1].split("_"+RANDOM_ID)[0])
+    threads:
+        config["threads"]
+    shell:
+        """
+        chromSize=$(grep {wildcards.chrom} {input.anchorChromSizeFile} | cut -f2)
+        echo {wildcards.chrom}
+        echo $chromSize
+        mkdir -p {OUTDIR}/pankmerAnchorBedgraphs/{wildcards.idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}
+        
+        pankmer anchor-region -t {threads} -i {params.index} -a {input.anchor} -c {wildcards.chrom}:1-${{chromSize}} | \
+            bedGraphPack stdin {OUTDIR}/pankmerAnchorBedgraphs/{wildcards.idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{wildcards.chrom}_{RANDOM_ID}.bdg
+
+        bedGraphToBigWig {OUTDIR}/pankmerAnchorBedgraphs/{wildcards.idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{wildcards.chrom}_{RANDOM_ID}.bdg \
+            {input.anchorChromSizeFile} {OUTDIR}/pankmerAnchorBedgraphs/{wildcards.idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{wildcards.chrom}_{RANDOM_ID}.bw
+        """
+
+rule generateWindowIntervals:
+    priority: 80
+    input:
+        anchorChromSizeFile = rules.makeChromSizeFile.output[0]
+    output:
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{windowSize}bpWindows_{ANCHOR_ROOT}.bed", OUTDIR=[OUTDIR], windowSize=[str(int(s)) for s in WINDOW_SIZES], ANCHOR_ROOT=[ANCHOR_ROOT])
+    conda:  
+        "config/requirements.yml"
+    params:
+        windows = " ".join([str(int(s)) for s in WINDOW_SIZES]),
+    shell:
+        """
+        for size in {params.windows}; do
+            bedtools makewindows -g {input.anchorChromSizeFile} -w ${{size}} -i srcwinnum | sort -k1,1 -k2,2n > {OUTDIR}/pankmerAnchorBedgraphs/${{size}}bpWindows_{ANCHOR_ROOT}.bed
+        done
+        """
+
+rule combine_bedgraphs:
+    priority: 80
+    group:
+        "combineBdgs{idxRoot}{ANCHOR_ROOT}"
+    input:
+        expand("{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{chrom}_{RANDOM_ID}.bdg", OUTDIR=[OUTDIR], RANDOM_ID=[RANDOM_ID], idxRoot=INDEX_ROOT_DICT.keys(), ANCHOR_ROOT=[ANCHOR_ROOT], chrom=ANCHOR_CHROM_LIST)
+    output:
+        combinedBdg = "{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{idxRoot}_wholeGenome_{RANDOM_ID}.bedgraph"
+    conda:  
+        "config/requirements.yml"
+    params:
+        idxRootBdgDir = lambda wildcards, output: "/".join(output[0].split("/")[:-1])
+    shell:
+        """
+        cat {params.idxRootBdgDir}/*{RANDOM_ID}.bdg | sort -k1,1 -k2,2n > {output.combinedBdg}
+        """
+
+rule averageAnchorSignalAcrossWindows:
+    priority: 70
+    group:
+        "avgBdgOver{windowSize}bp{idxRoot}{ANCHOR_ROOT}"
+    input:
+        windowIntervalBed = "{OUTDIR}/pankmerAnchorBedgraphs/{windowSize}bpWindows_{ANCHOR_ROOT}.bed",
+        combinedBdg = "{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{idxRoot}_wholeGenome_{RANDOM_ID}.bedgraph"
+    output:
+        "{OUTDIR}/pankmerAnchorBedgraphs/{idxRoot}-ANCHOREDTO-{ANCHOR_ROOT}_{RANDOM_ID}/{idxRoot}_wholeGenome_avgOver{windowSize}bpWindows_{RANDOM_ID}.avgdBdg"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        intersectBed -nonamecheck -sorted -wo -a {input.combinedBdg} -b {input.windowIntervalBed} | awk -F"\t" 'OFS="\t" {{ print $5, $6, $7-1, $8, $4 * $9 }}' | mergeBed -i stdin -c 4,5 -o distinct,sum | awk -F"\t" 'OFS="\t" {{ print $1, $2, "{wildcards.windowSize}bp_window", $5/($3-$2+1), "{wildcards.idxRoot}" }}'> {output}
+        """

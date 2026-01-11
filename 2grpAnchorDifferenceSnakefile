@@ -1,0 +1,58 @@
+from snakemake.utils import validate
+import json #, random, string
+
+validate(config, "schema/2grpAnchorDifConfig.schema.json")
+print(json.dumps(config, indent=4))
+
+# generate random 8-char alphanumeric barcode to shorten file names
+# RANDOM_ID = "".join(random.choices( string.ascii_letters + string.digits, k=8 ))
+
+RANDOM_ID = config["uniqueID"]
+LOCAL_PATH = config["localDirPath"]
+INDEXES = [ LOCAL_PATH+idx for idx in config["indexes"] ]
+SAMPLE = config["sample"]
+
+def getIndexRoot(idx):
+    return idx.split("/")[-1].split(".")[0]
+
+INDEX_ROOT_DICT = {}
+for i in INDEXES:
+    INDEX_ROOT_DICT[getIndexRoot(i)] = i
+
+anchor = LOCAL_PATH+config["anchorAssembly"]
+anchorRoot = "".join(anchor.split("/")[-1].split(".")[:-2])  # e.g. Gmax_MU-049.v1.softmasked
+
+CHROM_DICT = config["anchorChromSizeDict"]
+
+rule all:
+    input:
+        expand("{prefix}pankmer/anchorBedgraphs/{sample}-diffANCHOREDTO-{anchorRoot}_{randomID}/{chrom}_{randomID}.difPckBdg", prefix=[LOCAL_PATH], randomID=[RANDOM_ID], sample=[SAMPLE], anchorRoot=[anchorRoot], chrom=CHROM_DICT.keys())
+
+rule run_anchoring: # anchors all input indexes to the reference chrom in each job/node
+    input:
+        indexes = INDEXES,
+        anchor = LOCAL_PATH+config["anchorAssembly"]
+    output:
+        LOCAL_PATH + "pankmer/anchorBedgraphs/{sample}-diffANCHOREDTO-{anchorRoot}_{randomID}/{chrom}_{randomID}.difPckBdg"
+    conda:
+        "config/requirements.yml"
+    params:
+        threads = config["threads"],
+        prefix = LOCAL_PATH,
+        # idxRoot = lambda wildcards, output: output[0].split("/")[-2].split("-")[0],
+        anchorRoot = anchorRoot,
+        randomID = RANDOM_ID,
+        sample = SAMPLE,
+        indexes =  " ".join(INDEXES),
+        chrom = lambda wildcards, output: output[0].split("/")[-1].split("_")[0],
+        chromSize = lambda wildcards, output: CHROM_DICT.get(output[0].split("/")[-1].split("_")[0])
+    threads:
+        config["threads"]
+    shell:
+        """
+        echo {params.chrom} echo {params.chromSize}
+        mkdir -p {params.prefix}pankmer/anchorBedgraphs/{params.sample}-diffANCHOREDTO-{params.anchorRoot}_{params.randomID}
+        pankmer anchor-region -p {params.threads} -i {params.indexes} -a {input.anchor} -c {params.chrom}:1-{params.chromSize} | \
+            awk -F"\\t" 'OFS="\\t" {{ if ($4 > $5) {{print $1, $2, $3, $4-$5}} else {{print $1, $2, $3, $5-$4}} }}' | \
+            bedGraphPack stdin {params.prefix}pankmer/anchorBedgraphs/{params.sample}-diffANCHOREDTO-{params.anchorRoot}_{params.randomID}/{params.chrom}_{params.randomID}.difPckBdg
+        """

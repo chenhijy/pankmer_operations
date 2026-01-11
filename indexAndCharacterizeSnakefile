@@ -1,0 +1,132 @@
+from snakemake.utils import validate
+import json
+#import tarfile
+#from math import floor
+#from os.path import isfile
+
+validate(config, "schema/indexAndCharacterizeConfig.schema.json")
+print(json.dumps(config, indent=4))
+
+outdir = config["outdir"]
+outname = config["outputID"]
+
+k = config["k"]
+rounds = config["rounds"]
+fraction = config["fraction"] 
+ASSEMBLY_PATHS = config["genomes"].split(",")
+ASSEMBLY_LIST = config["genomes"].replace(",", " ")
+
+rule all:
+    input:
+        index = f"{outdir}/{outname}_index.tar",
+        adjmat = f"{outdir}/{outname}_adjMat.tsv",
+        ani_cluster_svg = f"{outdir}/{outname}_aniAdjMat.svg",
+        jaccard_cluster_svg = f"{outdir}/{outname}_jaccardAdjMat.svg",
+        collect_plot = f"{outdir}/{outname}_collect.svg",
+        collect_LogPlot = f"{outdir}/{outname}_logCollect.svg",
+        collect_table = f"{outdir}/{outname}_collect.tsv",
+        tree = f"{outdir}/{outname}_aniTree.nwk",
+        counts = f"{outdir}/{outname}_diagnosticKmerCounts.tsv"
+
+rule run_Index:
+    input:
+        files = ASSEMBLY_PATHS
+    group:
+        f"index_{outname}"
+    output:
+        index = f"{outdir}/{outname}_index.tar"
+    conda:
+        "config/requirements.yml"
+    params:
+        threads = config["threads"]
+    threads:
+        config["threads"]
+    shell:
+        """
+        pankmer index -k {k} --rounds {rounds} --fraction {fraction} -g {ASSEMBLY_LIST} -t {params.threads} --gzip-level 1 -o {output.index}
+        """
+
+rule run_AdjMatrix:
+    group:
+        f"pankmerAdjMat-related_{outname}"
+    input:
+        index = rules.run_Index.output.index
+    output:
+        adjmat = f"{outdir}/{outname}_adjMat.tsv"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer adj-matrix -i {input.index} -o {output.adjmat}
+        """
+
+rule run_clustermap:
+    group:
+        f"pankmerAdjMat-related_{outname}"
+    input:
+        adjmat = rules.run_AdjMatrix.output.adjmat
+    output:
+        ani_cluster_svg = f"{outdir}/{outname}_aniAdjMat.svg",
+        jaccard_cluster_svg = f"{outdir}/{outname}_jaccardAdjMat.svg"
+    conda:
+        "config/requirements.yml"
+    params:
+        outdir = config["outdir"],
+        dendRatio = config["dend-ratio"],
+        method = config["method"],
+        width = config["width"],
+        height = config["height"]
+    shell:
+        """
+        pankmer clustermap -i {input.adjmat} --method {params.method} --metric ani -o {output.ani_cluster_svg} --height {params.height} \
+        --width {params.width} --dend-ratio {params.dendRatio}
+        pankmer clustermap -i {input.adjmat} --method {params.method} --metric jaccard -o {output.jaccard_cluster_svg} --height {params.height} \
+        --width {params.width} --dend-ratio {params.dendRatio}
+        """
+
+rule run_collect:
+    group:
+        f"pankmerCollect_{outname}"
+    input:
+        index = rules.run_Index.output.index
+    output:
+        collect_plot = f"{outdir}/{outname}_collect.svg",
+        collect_LogPlot = f"{outdir}/{outname}_logCollect.svg",
+        collect_table = f"{outdir}/{outname}_collect.tsv"
+    conda:
+        "config/requirements.yml"
+    params:
+        outdir = outdir
+    shell:
+        """
+        pankmer collect --log -i {input.index} -o {output.collect_LogPlot} -t {output.collect_table} --title '{params.outdir} collect curve'
+        pankmer collect -i {input.index} -o {output.collect_plot} -t {output.collect_table} --title '{params.outdir} collect curve'
+        """
+
+rule run_count:
+    group:
+        f"pankmerCount_{outname}"
+    input:
+        index = rules.run_Index.output.index
+    output:
+        counts = f"{outdir}/{outname}_diagnosticKmerCounts.tsv"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer count -i {input.index} > {output.counts}
+    """
+
+rule run_tree:
+    group:
+        f"pankmerAdjMat-related_{outname}"
+    input:
+        adjmat = rules.run_AdjMatrix.output.adjmat
+    output:
+        tree = f"{outdir}/{outname}_aniTree.nwk"
+    conda:
+        "config/requirements.yml"
+    shell:
+        """
+        pankmer tree -i {input.adjmat} --metric ani -n > {output.tree}
+        """
