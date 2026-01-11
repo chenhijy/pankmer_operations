@@ -121,3 +121,4 @@
 </details>
 
 <img title="example output" alt="example output" src="egVizOutput.jpg">
+<img title="example output 2" alt="example output 2" src="egVizOutput2.jpg">
