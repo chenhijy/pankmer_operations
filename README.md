@@ -1,5 +1,5 @@
 
-###subset
+### subset
 ```
 snakemake --tibanna --use-conda --snakefile subsetSnakefile \
     --tibanna-config root_ebs_size=32 log_bucket=salk-tm-logs \
@@ -7,7 +7,7 @@ snakemake --tibanna --use-conda --snakefile subsetSnakefile \
     --configfile config/testSubsetPhased.json -p -j 1
 ```
 
-###indexAndCharacterize
+### indexAndCharacterize
 ```
 snakemake --tibanna --use-conda --snakefile indexAndCharacterizeSnakefile \
     --tibanna-config root_ebs_size=32 log_bucket=salk-tm-logs \
@@ -24,7 +24,7 @@ snakemake --tibanna --use-conda --snakefile indexAndCharacterizeSnakefile \
 
 ```
 
-###anchorRegion
+### anchorRegion
 ```
 snakemake --tibanna --use-conda --snakefile anchorRegionSnakefile \
     --tibanna-config root_ebs_size=32 log_bucket=salk-tm-logs \
