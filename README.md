@@ -40,8 +40,7 @@ snakemake --tibanna --use-conda --snakefile anchorRegionSnakefile \
 
 <details> 
 	<summary><code>getKmerConsSignalForSubRegion.sh</code></summary> 
-	
-	```
+
 	#!/bin/bash 
 	set -beEuo pipefail
 	
@@ -77,14 +76,11 @@ snakemake --tibanna --use-conda --snakefile anchorRegionSnakefile \
 	
 	done
 
-	```
-
 </details>
 
 <details> 
 	<summary><code>getCombinedRawSignalForRegion.sh</code></summary> 
-	
-	```
+
 	#!/bin/bash 
 	set -beEuo pipefail
 	
@@ -107,14 +103,11 @@ snakemake --tibanna --use-conda --snakefile anchorRegionSnakefile \
 		intersectBed -a ${i}/${chrom}_${runID}.bdg -b ${coords}.bed | awk -v name=$id -F"\t" 'OFS="\t" {print $1, $2+1, $4, name "\n" $1, $3, $4, name}' >> $outfile
 	done
 
-	```
-
 </details>
 
 <details> 
 	<summary><code>plotRegionGtracks.sh</code></summary> 
 	
-	```
 	#!/bin/bash
 	set -beEuo pipefail
 	
@@ -156,7 +149,6 @@ snakemake --tibanna --use-conda --snakefile anchorRegionSnakefile \
 		${bedgraph6} \
 		${bedgraph7} \
 		${coords}.png --plot-type "line:1" --gene-rows 3 --overlay --max 100 
-	```
 
 </details>
 
